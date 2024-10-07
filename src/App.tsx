@@ -8,6 +8,7 @@ import {
 } from "@/parser";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
+import { sqlToRelationalAlgebra } from "./sql-to-algebra";
 
 enum Step {
   Query,
@@ -33,6 +34,9 @@ function App() {
     const graph = buildOperatorGraph(parsedQuery);
     setGraph(graph);
     setStep(Step.Graph);
+
+    const result = sqlToRelationalAlgebra(query);
+    console.log(result);
   }
 
   function handleQueryChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
