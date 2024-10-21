@@ -9,6 +9,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { sqlToRelationalAlgebra } from "./sql-to-algebra";
+import GraphVisualization from "./components/graph";
 
 enum Step {
   Query,
@@ -103,7 +104,9 @@ function App() {
                 {graph.nodes.length === 0 ? (
                   <p className="text-sm text-slate-500">Nenhum grafo gerado</p>
                 ) : (
-                  <div className="flex flex-col gap-4">{/* Gerar grafo */}</div>
+                  <div className="flex flex-col gap-4">
+                    <GraphVisualization sqlQuery={query} />
+                  </div>
                 )}
               </div>
             </div>
