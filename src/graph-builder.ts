@@ -6,17 +6,22 @@ import {
   Table,
 } from "./data-structures";
 import { OperatorGraph } from "./parser";
-import { parseSQL } from "./parser";
-import { validateSQL } from "./parser";
+import { parseSQL, validateSQL } from "./parser";
 import { convertToRelationalAlgebra } from "./sql-to-algebra";
 
-// Função para gerar o grafo a partir de operações de álgebra relacional
-export function buildRelationalAlgebraGraph(
+interface ExecutionPlan {
+  steps: string[];
+  graph: OperatorGraph;
+}
+
+// Função para gerar o plano de execução junto com o grafo
+export function buildExecutionPlan(
   relation: RelationalOperation
-): OperatorGraph {
+): ExecutionPlan {
   const nodes: { id: string; label: string }[] = [];
   const edges: { from: string; to: string }[] = [];
   let nodeId = 0;
+  const executionSteps: string[] = [];
 
   // Função auxiliar para adicionar nós e arestas
   function addNode(label: string, parentId: string | null): string {
@@ -34,32 +39,46 @@ export function buildRelationalAlgebraGraph(
   function traverse(operation: RelationalOperation, parentId: string | null) {
     let currentId: string;
 
+    // Caso seja uma Tabela
     if (operation instanceof Table) {
-      currentId = addNode(`Table: ${operation.name}`, parentId);
-    } else if (operation instanceof Selection) {
-      currentId = addNode(`Selection: ${operation.condition}`, parentId);
+      currentId = addNode(`Tabela: ${operation.name}`, parentId);
+      executionSteps.push(`Tabela lida: ${operation.name}`);
+    }
+    // Caso seja uma Seleção
+    else if (operation instanceof Selection) {
+      currentId = addNode(`Select: ${operation.condition}`, parentId);
+      executionSteps.push(`Select feito: ${operation.condition}`);
       traverse(operation.relation, currentId);
-    } else if (operation instanceof Projection) {
+    }
+    // Caso seja uma Projeção
+    else if (operation instanceof Projection) {
       currentId = addNode(
-        `Projection: ${operation.attributes.join(", ")}`,
+        `Projeção: ${operation.attributes.join(", ")}`,
         parentId
       );
+      executionSteps.push(`Projeção feita: ${operation.attributes.join(", ")}`);
       traverse(operation.relation, currentId);
-    } else if (operation instanceof Join) {
+    }
+    // Caso seja um Join
+    else if (operation instanceof Join) {
       currentId = addNode(`Join: ${operation.condition}`, parentId);
+      executionSteps.push(`Join feito: ${operation.condition}`);
       traverse(operation.left, currentId);
       traverse(operation.right, currentId);
     }
   }
 
-  // Iniciar a construção do grafo a partir da operação de álgebra relacional
+  // Iniciar a construção do grafo e do plano de execução
   traverse(relation, null);
 
-  return { nodes, edges };
+  return {
+    steps: executionSteps,
+    graph: { nodes, edges },
+  };
 }
 
-// Função para converter SQL para álgebra relacional e gerar o grafo
-export function sqlToOperatorGraph(query: string): OperatorGraph | string {
+// Função para converter SQL para álgebra relacional e gerar o plano de execução
+export function sqlToExecutionPlan(query: string): ExecutionPlan | string {
   const parsedQuery = parseSQL(query);
 
   // Validar a consulta SQL
@@ -71,6 +90,6 @@ export function sqlToOperatorGraph(query: string): OperatorGraph | string {
   // Converter a consulta SQL para álgebra relacional
   const relationalAlgebra = convertToRelationalAlgebra(parsedQuery);
 
-  // Construir o grafo de operadores a partir da álgebra relacional
-  return buildRelationalAlgebraGraph(relationalAlgebra);
+  // Construir o plano de execução a partir da álgebra relacional
+  return buildExecutionPlan(relationalAlgebra);
 }

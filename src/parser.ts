@@ -148,6 +148,11 @@ export function buildOperatorGraph(parsedQuery: SQLQuery): OperatorGraph {
 export function validateSQL(parsedQuery: SQLQuery) {
   const errors = [];
 
+  if (!parsedQuery.select) {
+    errors.push("Cláusula SELECT é obrigatória.");
+    return errors;
+  }
+
   if (!parsedQuery.from) {
     errors.push("Cláusula FROM é obrigatória.");
     return errors;
