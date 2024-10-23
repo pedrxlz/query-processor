@@ -91,6 +91,10 @@ export function isValidField(table: string | null, field: string): boolean {
 }
 
 export function parseSQL(query: string) {
+  if (query.includes(";")) {
+    query = query.split(";")[0];
+  }
+
   query = query.replace(/\s+/g, " ").trim();
 
   const selectRegex = /SELECT (.+) FROM/i;

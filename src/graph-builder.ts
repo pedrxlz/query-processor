@@ -14,10 +14,71 @@ interface ExecutionPlan {
   graph: OperatorGraph;
 }
 
-// Função para gerar o plano de execução junto com o grafo
-export function buildExecutionPlan(
+// Função para aplicar a Heurística de Redução de Tuplas
+function applyTupleReduction(
+  relation: RelationalOperation
+): RelationalOperation {
+  if (relation instanceof Join) {
+    // Aplicar redução de tuplas recursivamente
+    relation.left = applyTupleReduction(relation.left);
+    relation.right = applyTupleReduction(relation.right);
+
+    // Mover seleção para antes do join, se possível
+    if (relation.left instanceof Selection) {
+      const selection = relation.left;
+      relation.left = selection.relation;
+      return new Selection(selection.condition, relation);
+    } else if (relation.right instanceof Selection) {
+      const selection = relation.right;
+      relation.right = selection.relation;
+      return new Selection(selection.condition, relation);
+    }
+  } else if (relation instanceof Selection) {
+    // Continuar aplicando a redução de tuplas na sub-relação
+    relation.relation = applyTupleReduction(relation.relation);
+  }
+  return relation;
+}
+
+// Função para aplicar a Heurística de Redução de Atributos
+function applyAttributeReduction(
+  relation: RelationalOperation
+): RelationalOperation {
+  if (relation instanceof Projection) {
+    // Aplicar a redução de atributos recursivamente
+    relation.relation = applyAttributeReduction(relation.relation);
+
+    // Mover projeção para antes do join ou seleção, se possível
+    if (
+      relation.relation instanceof Join ||
+      relation.relation instanceof Selection
+    ) {
+      const projection = relation;
+      const innerRelation = projection.relation;
+      projection.relation = (innerRelation as Selection | Projection).relation;
+      (innerRelation as Selection | Projection).relation = projection;
+      return innerRelation;
+    }
+  } else if (relation instanceof Join || relation instanceof Selection) {
+    // Continuar aplicando a redução de atributos nas sub-relações
+    if (relation instanceof Join) {
+      relation.left = applyAttributeReduction(relation.left);
+      relation.right = applyAttributeReduction(relation.right);
+    } else if (relation instanceof Selection) {
+      relation.relation = applyAttributeReduction(relation.relation);
+    }
+  }
+  return relation;
+}
+
+// Função para gerar o plano de execução otimizado
+export function buildOptimizedExecutionPlan(
   relation: RelationalOperation
 ): ExecutionPlan {
+  // Aplicar as heurísticas de redução de tuplas e de atributos
+  let optimizedRelation = applyTupleReduction(relation);
+  optimizedRelation = applyAttributeReduction(optimizedRelation);
+
   const nodes: { id: string; label: string }[] = [];
   const edges: { from: string; to: string }[] = [];
   let nodeId = 0;
@@ -68,8 +129,8 @@ export function buildExecutionPlan(
     }
   }
 
-  // Iniciar a construção do grafo e do plano de execução
-  traverse(relation, null);
+  // Construir o grafo e o plano de execução a partir da relação otimizada
+  traverse(optimizedRelation, null);
 
   return {
     steps: executionSteps,
@@ -77,8 +138,10 @@ export function buildExecutionPlan(
   };
 }
 
-// Função para converter SQL para álgebra relacional e gerar o plano de execução
-export function sqlToExecutionPlan(query: string): ExecutionPlan | string {
+// Função para converter SQL para o plano de execução otimizado
+export function sqlToOptimizedExecutionPlan(
+  query: string
+): ExecutionPlan | string {
   const parsedQuery = parseSQL(query);
 
   // Validar a consulta SQL
@@ -90,6 +153,6 @@ export function sqlToExecutionPlan(query: string): ExecutionPlan | string {
   // Converter a consulta SQL para álgebra relacional
   const relationalAlgebra = convertToRelationalAlgebra(parsedQuery);
 
-  // Construir o plano de execução a partir da álgebra relacional
-  return buildExecutionPlan(relationalAlgebra);
+  // Construir o plano de execução otimizado
+  return buildOptimizedExecutionPlan(relationalAlgebra);
 }

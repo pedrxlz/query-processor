@@ -1,25 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Network } from "vis-network";
-import { sqlToExecutionPlan } from "@/graph-builder";
+import { sqlToOptimizedExecutionPlan } from "@/graph-builder"; // Ajuste para usar a versão otimizada
 
 const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
   const graphContainerRef = useRef(null);
   const [executionPlan, setExecutionPlan] = useState<string[]>([]);
 
   useEffect(() => {
-    // Generate the execution plan from SQL
-    const result = sqlToExecutionPlan(sqlQuery);
+    // Gerar o plano de execução otimizado a partir da SQL
+    const result = sqlToOptimizedExecutionPlan(sqlQuery);
 
-    // If there are validation errors, alert the user
+    // Se houver erros de validação, mostrar um alerta ao usuário
     if (typeof result === "string") {
       alert(result);
       return;
     }
 
     const { steps, graph } = result;
-    setExecutionPlan(steps); // Set the execution plan
+    setExecutionPlan(steps); // Define o plano de execução
 
-    // Create a vis-network instance
+    // Criar uma instância de vis-network
     const container = graphContainerRef.current;
     const data = {
       nodes: graph.nodes,
@@ -37,14 +37,14 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
       },
     };
 
-    // Render the network
+    // Renderizar o grafo
     if (!container) return;
     new Network(container, data, options);
   }, [sqlQuery]);
 
   return (
     <div>
-      <h1>\Grafo de Consulta de Operadores</h1>
+      <h1>Grafo de Consulta de Operadores Otimizado</h1>
       <div
         ref={graphContainerRef}
         style={{
@@ -54,7 +54,7 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
         }}
       ></div>
 
-      <h2 className="text-white font-bold">Plano de Execução</h2>
+      <h2 className="text-white font-bold">Plano de Execução Otimizado</h2>
       <ol className="text-white font-bold">
         {executionPlan.map((step, index) => (
           <li key={index}>{step}</li>
