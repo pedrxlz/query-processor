@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Network } from "vis-network";
 import { sqlToOptimizedExecutionPlan } from "@/graph-builder"; // Ajuste para usar a versão otimizada
+import { useEffect, useRef, useState } from "react";
+import { Network, Options } from "vis-network";
 
 const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
@@ -22,7 +22,7 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
     setExecutionPlan(steps); // Define o plano de execução
 
     // Adicionar notação matemática nos rótulos dos nós
-    const formattedNodes = graph.nodes.map((node: any) => ({
+    const formattedNodes = graph.nodes.map((node) => ({
       ...node,
       label: node.label
         .replace("Select:", "σ ")
@@ -39,7 +39,7 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
     };
 
     // Opções para o layout em árvore
-    const options = {
+    const options: Options = {
       layout: {
         hierarchical: {
           enabled: true,
@@ -51,10 +51,14 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
       },
       nodes: {
         shape: "box",
-        margin: 10,
+        margin: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10,
+        },
         font: {
           size: 16,
-          bold: true,
           color: "#000000", // Texto em preto para melhor contraste
         },
         color: {
@@ -72,6 +76,7 @@ const GraphVisualization = ({ sqlQuery }: { sqlQuery: string }) => {
           type: "cubicBezier",
           forceDirection: "vertical", // Força as arestas a serem verticais
           roundness: 0.4,
+          enabled: true,
         },
       },
       physics: {

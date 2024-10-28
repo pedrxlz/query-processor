@@ -8,8 +8,8 @@ import {
 } from "@/parser";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { sqlToRelationalAlgebra } from "./sql-to-algebra";
 import GraphVisualization from "./components/graph";
+import { sqlToRelationalAlgebra } from "./sql-to-algebra";
 
 enum Step {
   Query,
@@ -49,7 +49,7 @@ function App() {
   }
 
   return (
-    <main className="bg-foreground h-screen flex flex-col items-center">
+    <main className="bg-foreground h-screen overflow-auto flex flex-col items-center">
       <section
         className="group my-auto w-full px-4 sm:w-[580px]"
         data-iserror={errors.length > 0}

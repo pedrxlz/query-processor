@@ -1,12 +1,11 @@
 import {
+  Join,
+  Projection,
   RelationalOperation,
   Selection,
-  Projection,
-  Join,
   Table,
 } from "./data-structures";
-import { OperatorGraph } from "./parser";
-import { parseSQL, validateSQL } from "./parser";
+import { OperatorGraph, parseSQL, validateSQL } from "./parser";
 import { convertToRelationalAlgebra } from "./sql-to-algebra";
 
 // Definindo a interface do Plano de Execução
