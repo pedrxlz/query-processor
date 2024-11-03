@@ -1,0 +1,34 @@
+-- Primeira Consulta
+SELECT Cliente.Nome, Pedido.idPedido, Pedido.DataPedido, Pedido.ValorTotalPedido
+FROM Cliente
+JOIN Pedido ON Cliente.idCliente = Pedido.Cliente_idCliente
+WHERE Cliente.TipoCliente_idTipoCliente = 1 AND Pedido.ValorTotalPedido = 0;
+
+-- Segunda Consulta
+SELECT Cliente.Nome, Pedido.idPedido, Pedido.DataPedido, Status.Descricao, Pedido.ValorTotalPedido
+FROM Cliente
+JOIN Pedido ON Cliente.idCliente = Pedido.Cliente_idCliente
+JOIN Status ON Status.idStatus = Pedido.Status_idStatus
+WHERE Status.Descricao = 'Aberto' AND Cliente.TipoCliente_idTipoCliente = 1 AND Pedido.ValorTotalPedido = 0;
+
+-- Terceira Consulta
+SELECT Cliente.Nome, Pedido.idPedido, Pedido.DataPedido, Status.Descricao, Pedido.ValorTotalPedido, Produto.QuantEstoque
+FROM Cliente
+JOIN Pedido ON Cliente.idCliente = Pedido.Cliente_idCliente
+JOIN Status ON Status.idStatus = Pedido.Status_idStatus
+JOIN Pedido_has_Produto ON Pedido.idPedido = Pedido_has_Produto.Pedido_idPedido
+JOIN Produto ON Produto.idProduto = Pedido_has_Produto.Produto_idProduto
+WHERE Status.Descricao = 'Aberto' AND Cliente.TipoCliente_idTipoCliente = 1 AND Pedido.ValorTotalPedido = 0 AND Produto.QuantEstoque > 0;
+
+-- Quarta Consulta
+SELECT Cliente.Nome, TipoCliente.Descricao, Pedido.idPedido, Pedido.DataPedido, Status.Descricao, Pedido.ValorTotalPedido, Categoria.Descricao, Produto.QuantEstoque
+FROM Cliente
+JOIN Pedido ON Cliente.idCliente = Pedido.Cliente_idCliente
+JOIN TipoCliente ON Cliente.TipoCliente_idTipoCliente = TipoCliente.idTipoCliente
+JOIN Endereco ON Cliente.idCliente = Endereco.Cliente_idCliente
+JOIN Status ON Status.idStatus = Pedido.Status_idStatus
+JOIN Pedido_has_Produto ON Pedido.idPedido = Pedido_has_Produto.Pedido_idPedido
+JOIN Produto ON Produto.idProduto = Pedido_has_Produto.Produto_idProduto
+JOIN Categoria ON Categoria.idCategoria = Produto.Categoria_idCategoria
+WHERE Status.Descricao = 'Aberto' AND Cliente.Email = 'Luffy@gmail.com' AND Pedido.ValorTotalPedido = 0 
+AND Produto.Preco > 5000 AND Endereco.Cidade = 'Gramado';

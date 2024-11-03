@@ -66,18 +66,6 @@ const dbSchema: DBSchema = {
   ],
 };
 
-/* Exemplo de Consultas SQL:
-
-Válida `SELECT Produto.Nome, Produto.Preco, Categoria.Descricao
-FROM Produto JOIN Categoria ON Produto.Categoria_idCategoria = Categoria.idCategoria
-WHERE Produto.Preco > 100`;
-
-Inválida `SELECT Produto.Nome, Produto.Preco, Categoria.Descricao
-FROM Produto JOIN Categoria ON Produto.Categoria_idCategoria = Categoria.idCategoria
-WHERE Produto.Preco > 100 AND Produto.InvalidField = 10`;
-
-*/
-
 export function isValidTable(table: string): boolean {
   return Object.keys(dbSchema).includes(table);
 }
@@ -91,26 +79,30 @@ export function isValidField(table: string | null, field: string): boolean {
 }
 
 export function parseSQL(query: string) {
+  // Remover ponto e vírgula ao final, mas manter dentro de strings
   if (query.includes(";")) {
-    query = query.split(";")[0];
+    query = query.replace(/;(?=(?:[^'"]|'[^']*'|"[^"]*")*$)/g, "");
   }
 
+  // Limpar espaços extras
   query = query.replace(/\s+/g, " ").trim();
 
   const selectRegex = /SELECT (.+) FROM/i;
   const fromRegex = /FROM (.+?)( WHERE| JOIN|$)/i;
-  const whereRegex = /WHERE (.+?)( JOIN|$)/i;
-  const joinRegex = /JOIN (.+?) ON (.+?)( WHERE|$)/gi;
+  const whereRegex = /WHERE (.+?)( JOIN|$|;)/i;
+  const joinRegex = /JOIN (.+?) ON (.+?)(?= JOIN| WHERE|$)/gi;
 
+  // Matchers
   const selectMatch = selectRegex.exec(query);
   const fromMatch = fromRegex.exec(query);
   const whereMatch = whereRegex.exec(query);
+
   const joinMatches = [];
   let joinMatch;
   while ((joinMatch = joinRegex.exec(query)) !== null) {
     joinMatches.push({
-      table: joinMatch[1],
-      condition: joinMatch[2],
+      table: joinMatch[1].trim(),
+      condition: joinMatch[2].trim(),
     });
   }
 
@@ -121,6 +113,7 @@ export function parseSQL(query: string) {
     joins: joinMatches,
   };
 }
+
 
 export function buildOperatorGraph(parsedQuery: SQLQuery): OperatorGraph {
   const nodes = [];
@@ -151,6 +144,7 @@ export function buildOperatorGraph(parsedQuery: SQLQuery): OperatorGraph {
 
 export function validateSQL(parsedQuery: SQLQuery) {
   const errors = [];
+
 
   if (!parsedQuery.select) {
     errors.push("Cláusula SELECT é obrigatória.");
@@ -211,3 +205,4 @@ export function validateSQL(parsedQuery: SQLQuery) {
 
   return errors;
 }
+
