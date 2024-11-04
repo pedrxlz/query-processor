@@ -15,8 +15,8 @@ export interface OperatorGraph {
 }
 
 const dbSchema: DBSchema = {
-  Categoria: ["idCategoria", "Descricao"],
-  Produto: [
+  categoria: ["idCategoria", "Descricao"],
+  produto: [
     "idProduto",
     "Nome",
     "Descricao",
@@ -24,8 +24,8 @@ const dbSchema: DBSchema = {
     "QuantEstoque",
     "Categoria_idCategoria",
   ],
-  TipoCliente: ["idTipoCliente", "Descricao"],
-  Cliente: [
+  tipocliente: ["idTipoCliente", "Descricao"],
+  cliente: [
     "idCliente",
     "Nome",
     "Email",
@@ -34,8 +34,8 @@ const dbSchema: DBSchema = {
     "TipoCliente_idTipoCliente",
     "DataRegistro",
   ],
-  TipoEndereco: ["idTipoEndereco", "Descricao"],
-  Endereco: [
+  tipoendereco: ["idTipoEndereco", "Descricao"],
+  endereco: [
     "idEndereco",
     "EnderecoPadrao",
     "Logradouro",
@@ -48,16 +48,16 @@ const dbSchema: DBSchema = {
     "TipoEndereco_idTipoEndereco",
     "Cliente_idCliente",
   ],
-  Telefone: ["Numero", "Cliente_idCliente"],
-  Status: ["idStatus", "Descricao"],
-  Pedido: [
+  telefone: ["Numero", "Cliente_idCliente"],
+  status: ["idStatus", "Descricao"],
+  pedido: [
     "idPedido",
     "Status_idStatus",
     "DataPedido",
     "ValorTotalPedido",
     "Cliente_idCliente",
   ],
-  Pedido_has_Produto: [
+  pedido_has_produto: [
     "idPedidoProduto",
     "Pedido_idPedido",
     "Produto_idProduto",
@@ -67,15 +67,21 @@ const dbSchema: DBSchema = {
 };
 
 export function isValidTable(table: string): boolean {
-  return Object.keys(dbSchema).includes(table);
+  // Tornar a comparação case-insensitive com .toLowerCase()
+  return Object.keys(dbSchema).some(
+    (key) => key.toLowerCase() === table.toLowerCase()
+  );
 }
 
 export function isValidField(table: string | null, field: string): boolean {
   if (!table || !isValidTable(table)) return false;
 
-  if (field == "*") return true;
+  if (field === "*") return true;
 
-  return dbSchema[table].includes(field);
+  // Tornar a comparação de campos case-insensitive também
+  return dbSchema[table.toLowerCase()].some(
+    (fieldName) => fieldName.toLowerCase() === field.toLowerCase()
+  );
 }
 
 export function parseSQL(query: string) {
@@ -87,7 +93,7 @@ export function parseSQL(query: string) {
   // Limpar espaços extras
   query = query.replace(/\s+/g, " ").trim();
 
-  const selectRegex = /SELECT (.+) FROM/i;
+  const selectRegex = /SELECT (.+?) FROM/i; // Modificado para incluir a opção '?' após '.+'
   const fromRegex = /FROM (.+?)( WHERE| JOIN|$)/i;
   const whereRegex = /WHERE (.+?)( JOIN|$|;)/i;
   const joinRegex = /JOIN (.+?) ON (.+?)(?= JOIN| WHERE|$)/gi;
@@ -113,7 +119,6 @@ export function parseSQL(query: string) {
     joins: joinMatches,
   };
 }
-
 
 export function buildOperatorGraph(parsedQuery: SQLQuery): OperatorGraph {
   const nodes = [];
@@ -144,7 +149,6 @@ export function buildOperatorGraph(parsedQuery: SQLQuery): OperatorGraph {
 
 export function validateSQL(parsedQuery: SQLQuery) {
   const errors = [];
-
 
   if (!parsedQuery.select) {
     errors.push("Cláusula SELECT é obrigatória.");
@@ -205,4 +209,3 @@ export function validateSQL(parsedQuery: SQLQuery) {
 
   return errors;
 }
-
